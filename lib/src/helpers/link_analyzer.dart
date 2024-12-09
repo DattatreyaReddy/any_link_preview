@@ -145,7 +145,8 @@ class LinkAnalyzer {
       final document = responseToDocument(response);
       if (document == null) return info;
 
-      final data_ = _extractMetadata(document, url: url);
+      final data_ = _extractMetadata(document,
+          url: url, linkWithOutProxy: linkWithOutProxy, proxyUrl: proxyUrl);
 
       if (data_ == null) {
         return info;
