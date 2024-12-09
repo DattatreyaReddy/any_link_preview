@@ -74,22 +74,29 @@ class LinkAnalyzer {
   /// technique.
   static Future<Metadata?> getInfoClientSide(
     String url, {
+    String? proxyUrl,
+    String? linkWithOutProxy,
     Duration? cache = const Duration(hours: 24),
     Map<String, String> headers = const {},
     // 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko)',
     // 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-    String? userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
+    String? userAgent =
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
   }) =>
       getInfo(
         url,
+        proxyUrl: proxyUrl,
+        linkWithOutProxy: linkWithOutProxy,
         cache: cache,
         headers: headers,
-        userAgent: userAgent
+        userAgent: userAgent,
       );
 
   /// Fetches a [url], validates it, then returns [Metadata].
   static Future<Metadata?> getInfo(
     String url, {
+    String? proxyUrl,
+    String? linkWithOutProxy,
     Duration? cache = const Duration(hours: 24),
     Map<String, String> headers = const {},
     String? userAgent,
@@ -175,8 +182,18 @@ class LinkAnalyzer {
   ///
   /// Future: Can pass in a strategy, e.g.: to retrieve only OpenGraph, or
   /// OpenGraph and Json+LD only.
-  static Metadata? _extractMetadata(Document document, {String? url}) {
-    return _parse(document, url: url);
+  static Metadata? _extractMetadata(
+    Document document, {
+    String? url,
+    String? proxyUrl,
+    String? linkWithOutProxy,
+  }) {
+    return _parse(
+      document,
+      url: url,
+      proxyUrl: proxyUrl,
+      linkWithOutProxy: linkWithOutProxy,
+    );
   }
 
   /// This is the default strategy for building our [Metadata].
@@ -186,7 +203,12 @@ class LinkAnalyzer {
   /// optionally provide a URL to the function, used to resolve relative images
   /// or to compensate for the lack of URI identifiers from the metadata
   /// parsers.
-  static Metadata _parse(Document? document, {String? url}) {
+  static Metadata _parse(
+    Document? document, {
+    String? url,
+    String? proxyUrl,
+    String? linkWithOutProxy,
+  }) {
     final output = Metadata();
 
     final parsers = [
@@ -214,7 +236,15 @@ class LinkAnalyzer {
     final url_ = output.url ?? url;
     final image = output.image;
     if (url_ != null && image != null) {
-      output.image = Uri.parse(url_).resolve(image).toString();
+      if (proxyUrl != null &&
+          proxyUrl.isNotEmpty &&
+          linkWithOutProxy != null &&
+          linkWithOutProxy.isNotEmpty) {
+        output.image =
+            proxyUrl + Uri.parse(linkWithOutProxy).resolve(image).toString();
+      } else {
+        output.image = Uri.parse(url_).resolve(image).toString();
+      }
     }
 
     return output;

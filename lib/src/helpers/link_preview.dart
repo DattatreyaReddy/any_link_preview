@@ -168,7 +168,7 @@ class AnyLinkPreview extends StatefulWidget {
     String? proxyUrl = '', // Pass for web
     Duration? cache = const Duration(days: 1),
     Map<String, String>? headers,
-    String? userAgent
+    String? userAgent,
   }) async {
     final linkValid = isValidLink(link);
     var proxyValid = true;
@@ -179,9 +179,11 @@ class AnyLinkPreview extends StatefulWidget {
       final linkToFetch = ((proxyUrl ?? '') + link).trim();
       return _getMetadata(
         linkToFetch,
+        linkWithOutProxy: link,
+        proxyUrl: proxyUrl,
         cache: cache,
         headers: headers ?? {},
-        userAgent: userAgent
+        userAgent: userAgent,
       );
     } else if (!linkValid) {
       throw Exception('Invalid link');
@@ -193,25 +195,31 @@ class AnyLinkPreview extends StatefulWidget {
   @protected
   static Future<Metadata?> _getMetadata(
     String link, {
+    String? proxyUrl,
+    String? linkWithOutProxy,
     Duration? cache = const Duration(days: 1),
     Map<String, String>? headers,
-    String? userAgent
+    String? userAgent,
   }) async {
     try {
       var info = await LinkAnalyzer.getInfo(
         link,
+        proxyUrl: proxyUrl,
+        linkWithOutProxy: linkWithOutProxy,
         cache: cache,
         headers: headers ?? {},
-        userAgent: userAgent
+        userAgent: userAgent,
       );
       if (info == null || info.hasData == false) {
         // if info is null or data is empty ,try to read URL metadata
         // client-side
         info = await LinkAnalyzer.getInfoClientSide(
           link,
+          proxyUrl: proxyUrl,
+          linkWithOutProxy: linkWithOutProxy,
           cache: cache,
           headers: headers ?? {},
-          userAgent: userAgent
+          userAgent: userAgent,
         );
       }
       return info;
